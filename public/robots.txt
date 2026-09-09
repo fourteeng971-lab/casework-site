@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.casework.work/sitemap.xml
