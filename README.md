@@ -30,8 +30,10 @@ Run `npx wrangler deploy --dry-run`, review generated content and links, commit,
 
 The app is preparing for its initial App Store release. Add the verified App Store listing link when available. Never add app source, customer data, signing files, or build archives to this public repository.
 
-## Screen recordings
+## Background motion
 
-Three recordings are served in `public/assets/videos/`. The H.264 MP4 playback files retain the recordings’ 2360 × 1640 landscape resolution. They are encoded for browser compatibility; the downloadable MOV originals are unchanged byte-for-byte. PNG posters are full-resolution frames extracted from the recordings. Native playback controls support pause, seeking, and fullscreen; videos do not autoplay or preload their full content. Switching away from the room tab pauses its video. These supplied clips have silent audio tracks.
+The hero and three feature previews use muted, looping inline H.264 video at 2360 × 1640. Playback begins automatically when a section is visible and pauses offscreen, in a hidden browser tab, or when the visitor pauses motion. The operating system’s reduced-motion preference shows still previews. The persistent motion button controls both videos and page animations. A small play button appears if the browser blocks automatic playback.
 
-Keep every static asset under Cloudflare’s per-file size limit. Regenerating pages preserves the video assets.
+There are no video download links, native player controls, or publicly deployed MOV originals. The original recordings remain in the private Marketing folder. MP4 files are served as playback media; this is not DRM or a guarantee against saving browser-accessible media.
+
+PNG posters are full-resolution extracted frames. Page regeneration preserves video assets.

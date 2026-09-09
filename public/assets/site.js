@@ -4,7 +4,8 @@ const motion = document.querySelector('.motion-toggle');
 let userMotion = null;
 function setMotion(value) {
   root.classList.toggle('reduce-motion', value);
-  if (motion) { motion.textContent = value ? 'Enable motion' : 'Reduce motion'; motion.setAttribute('aria-pressed', String(value)); }
+  document.dispatchEvent(new Event('casework:motionchange'));
+  if (motion) { motion.textContent = value ? 'Play motion' : 'Pause motion'; motion.setAttribute('aria-pressed', String(value)); }
 }
 setMotion(reduced.matches);
 reduced.addEventListener('change', e => { if (userMotion === null) setMotion(e.matches); });
@@ -23,6 +24,7 @@ for (const group of document.querySelectorAll('[data-tabs]')) {
       panel.hidden = !active; panel.classList.toggle('panel-enter', active);
       if (!active) panel.querySelectorAll('video').forEach(video => video.pause());
     }
+    document.dispatchEvent(new Event('casework:viewchange'));
     if (focus) tab.focus();
   }
   tabs.forEach((tab, index) => {
@@ -51,3 +53,59 @@ if (dialog) {
   dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
   dialog.addEventListener('close', () => { document.body.style.overflow = ''; previousFocus?.focus(); });
 }
+
+// Motion is part of the page, with playback limited to visible sections.
+const ambientVideos = [...document.querySelectorAll('[data-ambient-video]')];
+const visibleVideos = new Set();
+function canAnimate(video) {
+  return !document.hidden && !root.classList.contains('reduce-motion') && visibleVideos.has(video) && !video.closest('[hidden]');
+}
+function refreshVideos() {
+  for (const video of ambientVideos) {
+    const retry = video.closest('.motion-hero, .demo-figure')?.querySelector('.video-retry');
+    if (!canAnimate(video)) {
+      video.pause();
+      if (retry) retry.hidden = true;
+      continue;
+    }
+    if (!video.paused) continue;
+    video.play().then(() => {
+      if (!canAnimate(video)) video.pause();
+      if (retry) retry.hidden = true;
+    }).catch(() => { if (retry) retry.hidden = !canAnimate(video); });
+  }
+}
+for (const video of ambientVideos) {
+  video.muted = true;
+  video.defaultMuted = true;
+  video.loop = true;
+  video.playbackRate = 0.7;
+  video.addEventListener('contextmenu', event => event.preventDefault());
+  const retry = video.closest('.motion-hero, .demo-figure')?.querySelector('.video-retry');
+  if (retry) retry.addEventListener('click', () => {
+    video.play().then(() => { retry.hidden = true; }).catch(() => { retry.textContent = 'Preview unavailable'; });
+  });
+}
+if ('IntersectionObserver' in window) {
+  const videoObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) visibleVideos.add(entry.target); else visibleVideos.delete(entry.target);
+    }
+    refreshVideos();
+  }, {threshold:0.05});
+  ambientVideos.forEach(video => videoObserver.observe(video));
+} else {
+  const updateVisibleVideos = () => {
+    for (const video of ambientVideos) {
+      const bounds = video.getBoundingClientRect();
+      if (bounds.width && bounds.bottom > 0 && bounds.top < innerHeight) visibleVideos.add(video); else visibleVideos.delete(video);
+    }
+    refreshVideos();
+  };
+  addEventListener('scroll', updateVisibleVideos, {passive:true});
+  addEventListener('resize', updateVisibleVideos);
+  updateVisibleVideos();
+}
+document.addEventListener('visibilitychange', refreshVideos);
+document.addEventListener('casework:motionchange', refreshVideos);
+document.addEventListener('casework:viewchange', refreshVideos);
