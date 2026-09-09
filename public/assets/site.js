@@ -43,6 +43,7 @@ if (dialog) {
   const image = dialog.querySelector('img');
   document.querySelectorAll('[data-zoom]').forEach(button => button.addEventListener('click', () => {
     previousFocus = button; image.src = button.dataset.zoom; image.alt = button.querySelector('img').alt;
+    dialog.querySelector('.original-image').href = button.dataset.zoom;
     dialog.showModal(); document.body.style.overflow = 'hidden';
   }));
   dialog.querySelector('button').addEventListener('click', () => dialog.close());
