@@ -49,24 +49,3 @@ if (dialog) {
   dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
   dialog.addEventListener('close', () => { document.body.style.overflow = ''; previousFocus?.focus(); });
 }
-const form = document.getElementById('contact-form');
-if (form) {
-  const status = document.getElementById('form-status');
-  const button = form.querySelector('[type=submit]');
-  let submitting = false;
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    if (submitting || !form.reportValidity()) return;
-    submitting = true; button.disabled = true; button.textContent = 'Sending…'; form.setAttribute('aria-busy', 'true');
-    status.textContent = ''; status.classList.remove('error');
-    try {
-      const response = await fetch('/api/contact', {method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(form))), signal:AbortSignal.timeout(20000)});
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Your message could not be sent. Please try again.');
-      form.reset(); status.textContent = 'Message sent. Thanks for getting in touch—we’ll reply to the email you provided.';
-    } catch (error) {
-      status.classList.add('error');
-      status.textContent = error.name === 'TimeoutError' || error.name === 'AbortError' ? 'Delivery could not be confirmed. Your message is still here; please wait a minute before trying again.' : error instanceof TypeError ? 'We couldn’t connect. Check your connection and try again. Your message is still here.' : error.message;
-    } finally { submitting = false; button.disabled = false; button.innerHTML = 'Send message <span aria-hidden="true">↗</span>'; form.removeAttribute('aria-busy'); status.focus(); }
-  });
-}
