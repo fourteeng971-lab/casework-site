@@ -29,3 +29,9 @@ The layout uses actual app screenshots, responsive sections, keyboard-operable t
 Run `npx wrangler deploy --dry-run`, review generated content and links, commit, and push `main`. Check the resulting Cloudflare build and live site.
 
 The app is preparing for its initial App Store release. Add the verified App Store listing link when available. Never add app source, customer data, signing files, or build archives to this public repository.
+
+## Screen recordings
+
+Three recordings are served in `public/assets/videos/`. The H.264 MP4 playback files retain the recordings’ 2360 × 1640 landscape resolution. They are encoded for browser compatibility; the downloadable MOV originals are unchanged byte-for-byte. PNG posters are full-resolution frames extracted from the recordings. Native playback controls support pause, seeking, and fullscreen; videos do not autoplay or preload their full content. Switching away from the room tab pauses its video. These supplied clips have silent audio tracks.
+
+Keep every static asset under Cloudflare’s per-file size limit. Regenerating pages preserves the video assets.

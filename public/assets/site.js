@@ -21,6 +21,7 @@ for (const group of document.querySelectorAll('[data-tabs]')) {
       item.setAttribute('aria-selected', String(active)); item.tabIndex = active ? 0 : -1;
       const panel = document.getElementById(item.getAttribute('aria-controls'));
       panel.hidden = !active; panel.classList.toggle('panel-enter', active);
+      if (!active) panel.querySelectorAll('video').forEach(video => video.pause());
     }
     if (focus) tab.focus();
   }
