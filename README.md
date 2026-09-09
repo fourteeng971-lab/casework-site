@@ -7,7 +7,7 @@ Official public website, help, support, privacy policy and terms for the Casewor
 - Privacy Policy: https://www.casework.work/privacy
 - Terms: https://www.casework.work/terms
 
-Cloudflare Workers hosts the static files in `public/`. Production deploys from the GitHub `main` branch using `npx wrangler deploy`; no build command or secrets are required in this repository. Custom domains: `www.casework.work` and `casework.work`. The bare domain redirects to www.
+Cloudflare Workers hosts the static files in `public/`. Production deploys from the GitHub `main` branch using `npx wrangler deploy`; no build command or secrets are required in this repository. Custom domains: `www.casework.work` and `casework.work`. Configure the bare-domain redirect to www in the zone's Cloudflare Redirect Rules, preserving paths and query strings. Workers assets do not support domain-level source URLs in `_redirects`.
 
 The help, app privacy policy and terms are generated from the app's `HelpCenterView.swift`, so the public copy follows the app. Regenerate from the private Casework app repository:
 
