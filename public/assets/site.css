@@ -13,8 +13,8 @@
 /* The wordmark's face. IBM Plex Sans, self-hosted: the site makes no third-party requests and this
    does not start. Latin-1 subsets — the lockup only ever sets "casework", and the two faces come to
    43KB rather than 130KB. OFL-1.1, see assets/fonts/OFL.txt. */
-@font-face{font-family:"IBM Plex Sans";src:url("/assets/fonts/IBMPlexSans-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:"IBM Plex Sans";src:url("/assets/fonts/IBMPlexSans-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
 
 /* The mark building itself, on the home page's header lockup only (`data-logo-intro`). The same
    950ms sequence as the app, including the 300ms sheet draw the app's launch screen has to skip —
