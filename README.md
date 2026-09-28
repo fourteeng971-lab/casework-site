@@ -28,7 +28,7 @@ The layout uses actual app screenshots, responsive sections, keyboard-operable t
 
 Run `npx wrangler deploy --dry-run`, review generated content and links, commit, and push `main`. Check the resulting Cloudflare build and live site.
 
-The app is preparing for its initial App Store release. Add the verified App Store listing link when available. Never add app source, customer data, signing files, or build archives to this public repository.
+The App Store listing is https://apps.apple.com/app/id6794541279 (Casework: Cabinet Design, live since September 27, 2026). Every page carries it in the header, footer and a Smart App Banner, and the homepage in the hero, pricing and closing calls to action; the ID lives in `APP_STORE_ID` in the generator. Never add app source, customer data, signing files, or build archives to this public repository.
 
 ## Background motion
 
