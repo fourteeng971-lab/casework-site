@@ -14,6 +14,18 @@ Cloudflare Worker `casework-site` deploys `main` through the existing GitHub con
 
 Custom domains are `www.casework.work` and `casework.work`. Cloudflare Redirect Rules upgrade HTTP to HTTPS and redirect the bare domain to www while preserving paths and query strings. Domain-level sources cannot be placed in Workers assets' `_redirects` file.
 
+## Languages
+
+The site is in English at `/` and in German, Spanish, French and European Portuguese under `/de/`, `/es/`,
+`/fr/` and `/pt/`. Each page links its siblings with `hreflang`, the sitemap lists all of them, and a
+visitor who arrives from outside the site with a browser set to one of those languages is sent to it by
+`assets/lang.js`; everyone else, and anyone with scripts off, gets English. The language menu in the header
+and the footer links are plain links. The English one carries `?lang=en`, which stops the redirect. Nothing
+is stored in the browser. Help, policy and terms text comes from the app's string catalog; the rest is in
+`Scripts/website/i18n_*.py` in the private repository. The Cloudflare 404 page is served per language
+(`/de/404.html` and so on). Not localized: Apple's black en-US App Store badge, and the screenshots and
+videos, which show the English interface.
+
 ## Updating public pages
 
 From the private Casework app repository:

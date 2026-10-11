@@ -5,7 +5,7 @@ let userMotion = null;
 function setMotion(value) {
   root.classList.toggle('reduce-motion', value);
   document.dispatchEvent(new Event('casework:motionchange'));
-  if (motion) { motion.textContent = value ? 'Play motion' : 'Pause motion'; motion.setAttribute('aria-pressed', String(value)); }
+  if (motion) { motion.textContent = value ? (motion.dataset.play || 'Play motion') : (motion.dataset.pause || 'Pause motion'); motion.setAttribute('aria-pressed', String(value)); }
 }
 setMotion(reduced.matches);
 reduced.addEventListener('change', e => { if (userMotion === null) setMotion(e.matches); });
@@ -83,7 +83,7 @@ for (const video of ambientVideos) {
   video.addEventListener('contextmenu', event => event.preventDefault());
   const retry = video.closest('.motion-hero, .demo-figure')?.querySelector('.video-retry');
   if (retry) retry.addEventListener('click', () => {
-    video.play().then(() => { retry.hidden = true; }).catch(() => { retry.textContent = 'Preview unavailable'; });
+    video.play().then(() => { retry.hidden = true; }).catch(() => { retry.textContent = motion?.dataset.unavailable || 'Preview unavailable'; });
   });
 }
 if ('IntersectionObserver' in window) {
@@ -211,13 +211,15 @@ if (helpSearch) {
       .filter(item => item.points > 0)
       .sort((a, b) => b.points - a.points || a.order - b.order)
       .slice(0, 10);
-    if (!found.length) { status.textContent = `No topics match “${query}”. Try fewer or different words.`; return; }
-    status.textContent = found.length === 10 ? 'Showing the 10 best matches.' : `${found.length} ${found.length === 1 ? 'topic' : 'topics'} found.`;
+    if (!found.length) { status.textContent = (helpSearch.dataset.none || 'No topics match “{q}”. Try fewer or different words.').replace('{q}', query); return; }
+    status.textContent = found.length === 10
+      ? (helpSearch.dataset.best || 'Showing the 10 best matches.')
+      : (found.length === 1 ? (helpSearch.dataset.one || '{n} topic found.') : (helpSearch.dataset.many || '{n} topics found.')).replace('{n}', String(found.length));
     for (const { entry } of found) {
       const item = document.createElement('li');
       const link = document.createElement('a'); link.href = '#' + entry.id;
       const crumb = document.createElement('span'); crumb.className = 'crumb'; crumb.textContent = entry.articleTitle;
-      const name = document.createElement('strong'); name.textContent = entry.title === entry.articleTitle ? 'Overview' : entry.title;
+      const name = document.createElement('strong'); name.textContent = entry.title === entry.articleTitle ? (helpSearch.dataset.overview || 'Overview') : entry.title;
       const body = document.createElement('span'); body.className = 'snippet'; body.append(snippet(entry, terms));
       link.append(crumb, name, body); item.append(link); list.append(item);
     }
@@ -239,4 +241,22 @@ if (helpSearch) {
   const preset = new URLSearchParams(location.search).get('q');
   if (preset) { input.value = preset; run(); }
   helpSearch.hidden = false;
+}
+
+// The language menu. Each link already points at the same page in its language; this carries the
+// reader's place (section anchor) and search across, and closes the menu on Escape or an outside click.
+// Without scripts the menu still opens and every link still works.
+for (const link of document.querySelectorAll('[data-lang-link]')) {
+  const url = new URL(link.href);
+  if (location.hash) url.hash = location.hash;
+  const q = new URLSearchParams(location.search).get('q');
+  if (q && !url.searchParams.has('q')) url.searchParams.set('q', q);
+  link.href = url.pathname + url.search + url.hash;
+}
+const languageMenu = document.querySelector('.lang-menu');
+if (languageMenu) {
+  document.addEventListener('click', event => { if (!languageMenu.contains(event.target)) languageMenu.open = false; });
+  languageMenu.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { languageMenu.open = false; languageMenu.querySelector('summary').focus(); }
+  });
 }

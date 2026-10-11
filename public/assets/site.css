@@ -70,3 +70,20 @@
 article h3[id]{scroll-margin-top:100px}
 article h3:target{color:var(--accent)}
 @media(max-width:700px){.help-search input{font-size:16px}}
+.footer-links{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+footer .footer-langs{margin:6px 0 0;font-size:13px;color:var(--muted);text-align:right}
+footer .footer-langs a{color:#bec3b4;text-decoration:none}
+footer .footer-langs a:hover,footer .footer-langs a[aria-current]{color:var(--accent)}
+.lang-menu{position:relative;font-size:12px}
+.lang-menu summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;color:#c4c8bd;font-family:ui-monospace,SFMono-Regular,monospace;font-weight:550;letter-spacing:.1em}
+.lang-menu summary::-webkit-details-marker{display:none}
+.lang-menu summary::after{content:"";width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translate(-1px,-1px)}
+.lang-menu summary:hover,.lang-menu[open] summary{color:var(--accent);border-color:var(--accent)}
+.lang-menu ul{position:absolute;right:0;top:calc(100% + 8px);z-index:40;margin:0;padding:6px;list-style:none;min-width:160px;background:var(--dark);border:1px solid var(--line);border-radius:10px;box-shadow:0 18px 40px #0009}
+.lang-menu li a{display:block;padding:10px 14px;border-radius:6px;font-size:14px;text-decoration:none;color:#c4c8bd;white-space:nowrap}
+.lang-menu li a:hover{background:#ffffff0d;color:var(--ink)}
+.lang-menu li a[aria-current]{color:var(--accent)}
+@media(max-width:700px){.header-inner{grid-template-columns:1fr auto auto}.lang-menu{grid-column:2;grid-row:1}.header-download{grid-column:3;grid-row:1}.main-nav{grid-column:1/4;grid-row:2;flex-wrap:wrap;gap:4px 16px}.motion-toggle{grid-column:1/4;grid-row:3;justify-self:end;min-height:28px;padding:0}.footer-links{align-items:flex-start}footer .footer-langs{text-align:left}}
+.main-nav a,.motion-toggle,.header-download{white-space:nowrap}
+h1,h2,h3{overflow-wrap:break-word;hyphens:auto}
+@media(max-width:700px){html:not([lang=en]) main.document h1{font-size:clamp(34px,9.5vw,50px)}}
