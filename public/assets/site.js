@@ -109,3 +109,134 @@ if ('IntersectionObserver' in window) {
 document.addEventListener('visibilitychange', refreshVideos);
 document.addEventListener('casework:motionchange', refreshVideos);
 document.addEventListener('casework:viewchange', refreshVideos);
+
+// Help search: find topics as you type. The index is the page's own text, read here, so it can never
+// disagree with what is on the page. Nothing is sent anywhere; this runs entirely in the browser.
+const helpSearch = document.querySelector('[data-help-search]');
+if (helpSearch) {
+  const input = helpSearch.querySelector('input');
+  const status = helpSearch.querySelector('.help-status');
+  const list = helpSearch.querySelector('.help-results');
+  const fold = text => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const clean = text => text.replace(/\s+/g, ' ').trim();
+
+  // One entry per section (and one per article's opening line): where it lives and what it says.
+  const entries = [];
+  for (const article of document.querySelectorAll('main article[id]')) {
+    const articleTitle = clean(article.querySelector('h2')?.textContent ?? '');
+    let current = { id: article.id, articleTitle, title: articleTitle, text: clean(article.querySelector('.lede')?.textContent ?? '') };
+    entries.push(current);
+    for (const node of article.children) {
+      if (node.tagName === 'H3') {
+        current = { id: node.id || article.id, articleTitle, title: clean(node.textContent), text: '' };
+        entries.push(current);
+      } else if (node.tagName === 'P' && !node.classList.contains('lede')) {
+        current.text += ' ' + clean(node.textContent);
+      } else if (node.tagName === 'FIGURE') {
+        // A figure's numbered captions are part of what the section teaches, and are searchable.
+        current.text += ' ' + [...node.querySelectorAll('figcaption li')].map(item => clean(item.textContent)).join(' ');
+      }
+    }
+  }
+  for (const entry of entries) {
+    entry.text = entry.text.trim();     // so positions in the folded copy line up with the original
+    entry.foldedTitle = fold(entry.title);
+    entry.foldedArticle = fold(entry.articleTitle);
+    entry.foldedText = fold(entry.text);
+  }
+
+  // Words are matched from their start, so "count" finds "countertop" and not "account". A plural
+  // typed by the reader still finds the singular: the trailing s is dropped from the query.
+  const wordStart = (haystack, term, from = 0) => {
+    for (let i = haystack.indexOf(term, from); i >= 0; i = haystack.indexOf(term, i + 1)) {
+      if (i === 0 || !/[a-z0-9]/.test(haystack[i - 1])) return i;
+    }
+    return -1;
+  };
+
+  const score = (entry, terms) => {
+    let total = 0;
+    for (const term of terms) {
+      const inTitle = wordStart(entry.foldedTitle, term) >= 0;
+      const inArticle = wordStart(entry.foldedArticle, term) >= 0;
+      const at = wordStart(entry.foldedText, term);
+      if (!inTitle && !inArticle && at < 0) return 0;        // every word has to be somewhere
+      if (inTitle) total += 10;
+      if (inArticle) total += 4;
+      if (at >= 0) total += 2 + Math.min(4, entry.foldedText.split(term).length - 2);   // and a little for repeats
+    }
+    return total;
+  };
+
+  // A short run of the section's text around the first word found, with the words marked.
+  const snippet = (entry, terms) => {
+    const text = entry.text.trim();
+    const comparable = entry.foldedText.length === entry.text.length;   // positions line up
+    let first = -1;
+    if (comparable) for (const term of terms) { const i = wordStart(entry.foldedText, term); if (i >= 0 && (first < 0 || i < first)) first = i; }
+    const start = first > 60 ? text.lastIndexOf(' ', first - 40) + 1 : 0;
+    const piece = text.slice(start, start + 170);
+    const out = document.createDocumentFragment();
+    if (start > 0) out.append('… ');
+    const foldedPiece = comparable ? entry.foldedText.slice(start, start + 170) : '';
+    const spans = [];
+    if (foldedPiece) for (const term of terms) {
+      for (let i = wordStart(foldedPiece, term); i >= 0; i = wordStart(foldedPiece, term, i + term.length)) {
+        // The whole word, not just the letters typed, so "estimat" marks "estimate".
+        let end = i + term.length; while (end < foldedPiece.length && /[a-z0-9]/.test(foldedPiece[end])) end++;
+        spans.push([i, end]);
+      }
+    }
+    spans.sort((a, b) => a[0] - b[0]);
+    let cursor = 0;
+    for (const [from, to] of spans) {
+      if (from < cursor) continue;
+      out.append(piece.slice(cursor, from));
+      const mark = document.createElement('mark'); mark.textContent = piece.slice(from, to); out.append(mark);
+      cursor = to;
+    }
+    out.append(piece.slice(cursor));
+    if (start + 170 < text.length) out.append(' …');
+    return out;
+  };
+
+  const run = () => {
+    const query = input.value.trim();
+    list.replaceChildren();
+    if (!query) { status.textContent = ''; return; }
+    const terms = fold(query).split(/\s+/).filter(Boolean)
+      .map(term => term.length > 3 && term.endsWith('s') ? term.slice(0, -1) : term);
+    const found = entries
+      .map((entry, order) => ({ entry, order, points: score(entry, terms) }))
+      .filter(item => item.points > 0)
+      .sort((a, b) => b.points - a.points || a.order - b.order)
+      .slice(0, 10);
+    if (!found.length) { status.textContent = `No topics match “${query}”. Try fewer or different words.`; return; }
+    status.textContent = found.length === 10 ? 'Showing the 10 best matches.' : `${found.length} ${found.length === 1 ? 'topic' : 'topics'} found.`;
+    for (const { entry } of found) {
+      const item = document.createElement('li');
+      const link = document.createElement('a'); link.href = '#' + entry.id;
+      const crumb = document.createElement('span'); crumb.className = 'crumb'; crumb.textContent = entry.articleTitle;
+      const name = document.createElement('strong'); name.textContent = entry.title === entry.articleTitle ? 'Overview' : entry.title;
+      const body = document.createElement('span'); body.className = 'snippet'; body.append(snippet(entry, terms));
+      link.append(crumb, name, body); item.append(link); list.append(item);
+    }
+  };
+
+  input.addEventListener('input', run);
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { input.value = ''; run(); }
+    else if (event.key === 'ArrowDown') { list.querySelector('a')?.focus(); event.preventDefault(); }
+    else if (event.key === 'Enter') { const first = list.querySelector('a'); if (first) { event.preventDefault(); first.click(); } }
+  });
+  list.addEventListener('keydown', event => {
+    const links = [...list.querySelectorAll('a')], at = links.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown') { links[Math.min(at + 1, links.length - 1)]?.focus(); event.preventDefault(); }
+    else if (event.key === 'ArrowUp') { (at > 0 ? links[at - 1] : input).focus(); event.preventDefault(); }
+    else if (event.key === 'Escape') { input.focus(); }
+  });
+  // A link such as /support?q=countertop opens with the search already run.
+  const preset = new URLSearchParams(location.search).get('q');
+  if (preset) { input.value = preset; run(); }
+  helpSearch.hidden = false;
+}
